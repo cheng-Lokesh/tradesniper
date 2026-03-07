@@ -167,10 +167,13 @@ class TradeSniperUI:
             self._append_log("⚠️ 检测到 Playwright 运行时异常，已自动切换到 HTTP 巡逻模式")
         else:
             env["FORCE_HTTP_FALLBACK"] = "0"
-        for key in ["HTTP_PROXY", "HTTPS_PROXY", "ALL_PROXY", "http_proxy", "https_proxy", "all_proxy"]:
-            env.pop(key, None)
-        env["NO_PROXY"] = "*"
-        env["no_proxy"] = "*"
+        # Use the system's default network configuration
+        # Do not force proxy stripping
+        # for key in ["HTTP_PROXY", "HTTPS_PROXY", "ALL_PROXY", "http_proxy", "https_proxy", "all_proxy"]:
+        #    env.pop(key, None)
+        # env["NO_PROXY"] = "*"
+        # env["no_proxy"] = "*"
+
         
         command = [python_exe, "-u", engine_file]
         self._append_log(f"启动命令：{' '.join(command)}")
