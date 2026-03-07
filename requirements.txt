@@ -1,0 +1,14 @@
+# Core Dependencies
+playwright>=1.40.0
+python-dotenv>=1.0.0
+requests>=2.31.0
+deepseek-api>=1.0.0  # Just in case user uses SDK, though engine.py uses os.getenv
+
+# GUI
+# tkinter is standard library
+
+# Development
+pytest>=7.4.0
+black>=23.0.0
+flake8>=6.0.0
+mypy>=1.0.0

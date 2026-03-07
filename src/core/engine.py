@@ -39,54 +39,15 @@ DEEPSEEK_KEY = os.getenv("DEEPSEEK_API_KEY")
 SERVER_CHAN_KEY = os.getenv("SERVER_CHAN_KEY")
 NETWORK_STACK_BROKEN = False
 
-WHOLESALE_KEYWORDS = [
-    "批发", "工厂", "厂家", "商家", "店铺", "现货", "一件代发", "代理",
-    "量大", "多台", "多件", "可议价", "可开票", "库存", "专营", "全新机",
-    "秒发", "全国包邮", "招代理", "渠道货"
-]
-
-INVENTORY_STYLE_KEYWORDS = [
-    "有货", "库存充足", "大量现货", "长期有货", "手里很多", "很多台", "多台在售", "可批",
-    "可选颜色", "颜色可选", "款式可选", "型号可选", "多个型号", "多个款式", "多色可选",
-    "颜色齐全", "款式齐全", "不同款式", "不同型号", "多版本", "各版本", "任意挑选"
-]
-
-INVENTORY_STYLE_PATTERNS = [
-    r"(库存|现货|有货).{0,6}(\d{2,}|很多|充足|足量|大量)",
-    r"(还有|现有|手里有).{0,8}\d+\s*(台|件|个|套)",
-    r"\d+\s*(台|件|个|套).{0,6}(可选|在售|可发)",
-    r"(多款|多色|多型号|多版本|不同款式|不同型号)",
-    r"(颜色|款式|型号).{0,6}(可选|齐全|都有|任选)",
-    r"(可选|任选).{0,6}(颜色|款式|型号|版本)"
-]
-
-NON_PERSONAL_STRONG_KEYWORDS = [
-    "批发价", "出厂价", "渠道价", "代理", "招代理", "诚招代理", "一件代发",
-    "支持代发", "可开票", "公司", "工作室", "实体店", "门店", "仓库", "清仓甩货"
-]
-
-NON_PERSONAL_SOFT_KEYWORDS = [
-    "库存", "现货", "有货", "大量", "充足", "长期有货", "多台", "多件", "多款",
-    "多型号", "多版本", "颜色可选", "款式可选", "型号可选", "齐全", "任选", "可批"
-]
-
-NON_PERSONAL_PATTERNS = [
-    r"(库存|现货|有货).{0,8}(\d{2,}|很多|充足|大量)",
-    r"(还有|现有|手里有).{0,8}\d+\s*(台|件|个|套|部)",
-    r"\d+\s*(台|件|个|套|部).{0,8}(在售|可发|可选|可批)",
-    r"(颜色|款式|型号|版本).{0,8}(可选|齐全|都有|任选)",
-    r"(支持|可).{0,6}(批发|代发|开票)",
-    r"(全新|全新未拆).{0,6}(现货|库存)"
-]
-
-IMPLICIT_VARIANT_PATTERNS = [
-    r"(国行|港版|日版|美版|欧版)\s*[/、|,，]\s*(国行|港版|日版|美版|欧版)",
-    r"(\d{2,4}\s*(g|gb|tb))\s*[/、|,，]\s*(\d{2,4}\s*(g|gb|tb))",
-    r"(黑色|白色|蓝色|红色|绿色|紫色|粉色|灰色)\s*[/、|,，]\s*(黑色|白色|蓝色|红色|绿色|紫色|粉色|灰色)",
-    r"(标准版|豪华版|高配版|低配版|pro|lite|oled)\s*[/、|,，]\s*(标准版|豪华版|高配版|低配版|pro|lite|oled)",
-    r"(颜色|款式|型号|版本|内存|容量|配色|机型).{0,16}[/、|,，].{0,16}",
-    r"(颜色|款式|型号|版本|内存|容量|配色|机型).{0,12}(和|或).{0,12}"
-]
+from src.config.settings import (
+    WHOLESALE_KEYWORDS,
+    INVENTORY_STYLE_KEYWORDS,
+    INVENTORY_STYLE_PATTERNS,
+    NON_PERSONAL_STRONG_KEYWORDS,
+    NON_PERSONAL_SOFT_KEYWORDS,
+    NON_PERSONAL_PATTERNS,
+    IMPLICIT_VARIANT_PATTERNS
+)
 
 def parse_single_price(price_text):
     if not price_text:
@@ -317,11 +278,11 @@ def http_request_with_fallback(url, method="GET", headers=None, data=None, timeo
 def send_wechat_alert(title, price, reason):
     print(f"📡 正在发射红色警报到手机微信...")
     if not SERVER_CHAN_KEY:
-        print("⚠️ 未设置 SERVER_CHAN_KEY，跳过微信报警")
+        print("Warning 未设置 SERVER_CHAN_KEY，跳过微信报警")
         return
     url = f"https://sctapi.ftqq.com/{SERVER_CHAN_KEY}.send"
     data = {
-        "title": f"🚨 发现捡漏机！{price}元",
+        "title": f"Alert 发现捡漏机！{price}元",
         "desp": f"**商品:** {title}\n\n**价格:** {price}元\n\n**AI分析:** {reason}\n\n[点击前往闲鱼查看](https://www.goofish.com/search?q=Switch+Lite)"
     }
     try:
@@ -334,11 +295,11 @@ def send_wechat_alert(title, price, reason):
             timeout=20
         )
         if ok and status == 200:
-            print(f"✅ 警报送达成功 ({channel})")
+            print(f"OK 警报送达成功 ({channel})")
         else:
-            print(f"❌ 报警发送失败: {status}")
+            print(f"Error 报警发送失败: {status}")
     except Exception as e:
-        print(f"❌ 报警发送失败: {e}")
+        print(f"Error 报警发送失败: {e}")
 
 def analyze_with_ai(title, price, threshold):
     if not DEEPSEEK_KEY:
@@ -457,7 +418,7 @@ def is_socket_runtime_error(err):
     return "WinError 10022" in text or "_overlapped" in text
 
 def start_patrol_fallback_http():
-    print("⚠️ 浏览器模式不可用，已切换到HTTP兜底巡逻模式")
+    print("Warning 浏览器模式不可用，已切换到HTTP兜底巡逻模式")
     print("该模式仅用于保持程序可运行，筛选精度低于浏览器模式")
     history_alerts = set()
     query_url = "https://www.goofish.com/search?q=Switch+Lite"
@@ -475,7 +436,7 @@ def start_patrol_fallback_http():
     ]
     while True:
         wait_if_paused()
-        print(f"\n⏰ 兜底巡逻打卡: {time.strftime('%H:%M:%S')}")
+        print(f"\nTime 兜底Patrol check-in: {time.strftime('%H:%M:%S')}")
         titles = []
         prices_str = []
         item_texts = []
@@ -490,7 +451,7 @@ def start_patrol_fallback_http():
                 if ok and html:
                     if "error-container" in html and "goofish" in html.lower():
                         network_unavailable = True
-                        print(f"⚠️ 已连通网络，但被目标站点拦截访问({channel})，本轮切换离线兜底样本")
+                        print(f"Warning 已连通网络，但被目标站点拦截访问({channel})，本轮切换离线兜底样本")
                         titles = sample_titles[:]
                         prices_str = sample_prices[:]
                         item_texts = sample_texts[:]
@@ -509,7 +470,7 @@ def start_patrol_fallback_http():
                             item_texts.append(text)
                 else:
                     network_unavailable = True
-                    print(f"⚠️ HTTP抓取失败({channel})，本轮直接切换离线兜底样本")
+                    print(f"Warning HTTP抓取失败({channel})，本轮直接切换离线兜底样本")
                     titles = sample_titles[:]
                     prices_str = sample_prices[:]
                     item_texts = sample_texts[:]
@@ -518,10 +479,10 @@ def start_patrol_fallback_http():
                 prices_str = sample_prices[:]
                 item_texts = sample_texts[:]
             if not prices_str or not titles:
-                print("⚠️ HTTP兜底模式未抓取到有效数据")
+                print("Warning HTTP兜底模式未抓取到有效数据")
             else:
                 THRESHOLD = calculate_dynamic_threshold(prices_str)
-                print(f"📊 当前动态阈值: {THRESHOLD}")
+                print(f"Stats 当前动态阈值: {THRESHOLD}")
                 for i in range(min(len(titles), len(prices_str), 8)):
                     title = titles[i].strip()
                     raw_price = prices_str[i].strip()
@@ -538,7 +499,7 @@ def start_patrol_fallback_http():
                     if price is None:
                         continue
                     if price <= THRESHOLD and title not in history_alerts:
-                        print(f"🔍 发现潜在机会: {title} ({price}元), 正在AI分析...")
+                        print(f"Search 发现潜在机会: {title} ({price}元), 正在AI分析...")
                         decision = analyze_with_ai(title, price, THRESHOLD)
                         if decision and decision.get("is_arbitrage_opportunity"):
                             send_wechat_alert(title, price, decision.get('reason', '无理由'))
@@ -549,27 +510,27 @@ def start_patrol_fallback_http():
         except Exception as e:
             if "WinError 10022" in str(e) or NETWORK_STACK_BROKEN:
                 network_unavailable = True
-                print("⚠️ 检测到系统网络调用异常，已切换到离线兜底样本模式")
-            print(f"⚠️ HTTP兜底巡逻异常: {e}")
+                print("Warning 检测到系统网络调用异常，已切换到离线兜底样本模式")
+            print(f"Warning HTTP兜底巡逻异常: {e}")
         sleep_time = get_patrol_sleep_seconds()
         print(f"💤 本轮巡逻结束，进入深度睡眠 {int(sleep_time)} 秒...")
         controlled_sleep(sleep_time)
 
 def start_patrol():
     if os.getenv("FORCE_HTTP_FALLBACK", "0").strip() == "1":
-        print("⚠️ 已启用强制HTTP巡逻模式，跳过Playwright浏览器流程")
+        print("Warning 已启用强制HTTP巡逻模式，跳过Playwright浏览器流程")
         start_patrol_fallback_http()
         return
     sync_playwright, import_error = get_sync_playwright()
     if sync_playwright is None:
-        print(f"⚠️ Playwright加载失败: {import_error}")
+        print(f"Warning Playwright加载失败: {import_error}")
         if is_socket_runtime_error(import_error):
-            print("⚠️ 检测到系统异步IO/套接字运行时异常（_overlapped），当前不是页面访问超时问题")
+            print("Warning 检测到系统异步IO/套接字运行时异常（_overlapped），当前不是页面访问超时问题")
             print("建议先修复本机 Python 运行时或 Winsock 环境，再恢复浏览器模式")
         start_patrol_fallback_http()
         return
     with sync_playwright() as p:
-        print("🕵️‍♂️ Agent 已进入潜伏模式，开始 24H 巡逻...")
+        print("Agent Agent 已进入潜伏模式，开始 24H 巡逻...")
         
         browser = None
         # 尝试使用多种浏览器通道
@@ -599,16 +560,16 @@ def start_patrol():
                 # 如果需要登录（LOGIN_MODE=1），强制关闭 headless
                 if os.getenv("LOGIN_MODE", "0") == "1":
                     headless_mode = False
-                    print("⚠️ 登录模式：已强制显示浏览器窗口")
+                    print("Warning 登录模式：已强制显示浏览器窗口")
 
                 browser = p.chromium.launch(headless=headless_mode, **config)
-                print(f"✅ 成功启动: {browser_name} (Headless: {headless_mode})")
+                print(f"OK 成功启动: {browser_name} (Headless: {headless_mode})")
                 break
             except Exception as e:
-                print(f"❌ 启动 {browser_name} 失败: {e}")
+                print(f"Error 启动 {browser_name} 失败: {e}")
         
         if not browser:
-            print("\n🚨 所有浏览器启动尝试均失败！")
+            print("\nAlert 所有浏览器启动尝试均失败！")
             if use_local_browser_only:
                 print("当前已启用本地浏览器优先模式，运行时不会触发Playwright浏览器下载。")
                 print("请确认本机已安装 Edge 或 Chrome，或设置 USE_LOCAL_BROWSER_ONLY=0 后重试。")
@@ -624,9 +585,9 @@ def start_patrol():
             if os.path.exists("state.json"):
                 try:
                     context = browser.new_context(storage_state="state.json")
-                    print("✅ 成功加载 state.json")
+                    print("OK 成功加载 state.json")
                 except Exception as e:
-                    print(f"⚠️ state.json 加载失败，将使用新会话: {e}")
+                    print(f"Warning state.json 加载失败，将使用新会话: {e}")
                     context = browser.new_context()
             else:
                 context = browser.new_context()
@@ -637,27 +598,27 @@ def start_patrol():
 
             while True:
                 wait_if_paused()
-                print(f"\n⏰ 巡逻打卡: {time.strftime('%H:%M:%S')}")
+                print(f"\nTime Patrol check-in: {time.strftime('%H:%M:%S')}")
                 try:
                     # 使用 domcontentloaded 等待页面加载完成
                     page.goto("https://www.goofish.com/search?q=Switch+Lite", wait_until="domcontentloaded", timeout=60000)
                     
                     # 检查是否需要登录或验证码
                     if "login" in page.url or "verify" in page.url:
-                        print("⚠️ 检测到可能需要登录或验证，请在浏览器中手动操作...")
+                        print("Warning 检测到可能需要登录或验证，请在浏览器中手动操作...")
                         if headless_mode:
-                            print("❌ 警告：当前为无头模式，无法手动登录！建议重启使用登录模式。")
+                            print("Error 警告：当前为无头模式，无法手动登录！建议重启使用登录模式。")
                         
                         # 给用户300秒时间登录，期间不断尝试保存状态
                         for i in range(10): 
-                             print(f"⏳ 等待登录操作 ({i+1}/10)...")
+                             print(f"Waiting 等待登录操作 ({i+1}/10)...")
                              controlled_sleep(30)
                              try:
                                  context.storage_state(path="state.json")
-                                 print("✅ 已尝试保存当前状态到 state.json")
+                                 print("OK 已尝试保存当前状态到 state.json")
                                  # 如果URL不再包含 login/verify，可能登录成功了
                                  if "login" not in page.url and "verify" not in page.url:
-                                     print("✅ 检测到页面跳转，假设登录成功！")
+                                     print("OK 检测到页面跳转，假设登录成功！")
                                      break
                              except: pass
 
@@ -715,7 +676,7 @@ def start_patrol():
                                  item_texts = ["" for _ in range(min(len(titles), len(prices_str)))]
 
                     except:
-                        print("⚠️ 无法找到商品列表，正在尝试截图并重试...")
+                        print("Warning 无法找到商品列表，正在尝试截图并重试...")
                         try:
                             page.screenshot(path="error_debug.png")
                         except: pass
@@ -723,11 +684,11 @@ def start_patrol():
                         continue
                     
                     if not prices_str or not titles:
-                        print("⚠️ 未抓取到有效数据 (可能需要登录或页面结构已变更)")
+                        print("Warning 未抓取到有效数据 (可能需要登录或页面结构已变更)")
                         continue
 
                     THRESHOLD = calculate_dynamic_threshold(prices_str)
-                    print(f"📊 当前动态阈值: {THRESHOLD}")
+                    print(f"Stats 当前动态阈值: {THRESHOLD}")
 
                     for i in range(min(len(titles), len(prices_str), 8)):
                         title = titles[i].strip()
@@ -749,7 +710,7 @@ def start_patrol():
                             continue
 
                         if price <= THRESHOLD and title not in history_alerts:
-                            print(f"🔍 发现潜在机会: {title} ({price}元), 正在AI分析...")
+                            print(f"Search 发现潜在机会: {title} ({price}元), 正在AI分析...")
                             decision = analyze_with_ai(title, price, THRESHOLD)
                             if decision and decision.get("is_arbitrage_opportunity"):
                                 send_wechat_alert(title, price, decision.get('reason', '无理由'))
@@ -765,20 +726,20 @@ def start_patrol():
                     try:
                         page.screenshot(path="error_debug.png")
                     except: pass
-                    print(f"⚠️ 本轮巡逻受阻: {inner_e}")
+                    print(f"Warning 本轮巡逻受阻: {inner_e}")
                     
                 sleep_time = get_patrol_sleep_seconds()
                 print(f"💤 本轮巡逻结束，进入深度睡眠 {int(sleep_time)} 秒...")
                 controlled_sleep(sleep_time)
 
         except Exception as e:
-            print(f"❌ 巡逻被强制中断: {e}")
+            print(f"Error 巡逻被强制中断: {e}")
         finally:
             # 退出前保存状态
             try:
                 if context:
                     context.storage_state(path="state.json")
-                    print("✅ 退出前已保存 state.json")
+                    print("OK 退出前已保存 state.json")
             except: pass
 
             try:
@@ -791,13 +752,13 @@ def run_engine_forever():
     while True:
         try:
             start_patrol()
-            print(f"⚠️ 引擎已退出，{restart_delay} 秒后自动拉起")
+            print(f"Warning 引擎已退出，{restart_delay} 秒后自动拉起")
         except KeyboardInterrupt:
             print("🛑 收到停止信号，巡逻结束")
             break
         except Exception as e:
-            print(f"❌ 引擎异常退出: {e}")
-            print(f"⚠️ {restart_delay} 秒后自动拉起")
+            print(f"Error 引擎异常退出: {e}")
+            print(f"Warning {restart_delay} 秒后自动拉起")
         controlled_sleep(restart_delay)
 
 if __name__ == "__main__":
