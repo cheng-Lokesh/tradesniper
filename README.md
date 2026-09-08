@@ -1,6 +1,10 @@
-# TradeSniper (二手闲鱼交易狙击手)
+# TradeSniper · 二手商品智能监控工具
 
-TradeSniper 是一款基于 Python 的自动化二手商品监控与分析工具，旨在帮助用户高效筛选出具有高性价比的个人闲置商品。项目集成了 Playwright 自动化爬虫、DeepSeek AI 智能分析以及 Tkinter 图形化界面，实现了从数据采集到决策辅助的全流程自动化。
+> 用浏览器自动化、规则过滤与 AI 辅助分析，减少二手平台商品筛选中的重复劳动。
+
+TradeSniper 是一个基于 Python 的桌面端原型，覆盖关键词巡检、职业卖家过滤、候选商品分析与可视化监控。它把数据采集和决策辅助串成一条可操作流程，但不会替用户完成交易，也不保证商品真实性或投资回报。
+
+![TradeSniper running preview](sniper_proof.png)
 
 ## ✨ 核心功能
 
